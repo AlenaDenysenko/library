@@ -89,14 +89,17 @@
             background-color: #B71C1C;
         }
 
-        .issue-btn {
+        .issue-btn,
+        .return-btn {
             background-color: #355E3B;
             color: #FFFFFF;
             border: none;
             padding: 8px 12px;
+            margin-right: 5px;
         }
 
-        .issue-btn:hover {
+        .issue-btn:hover,
+        .return-btn:hover {
             background-color: #FFD700;
             color: #0057B7;
         }
@@ -183,6 +186,32 @@
             background-color: #B71C1C;
             color: #FFFFFF;
         }
+
+        .filter-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .filter-btn {
+            background-color: #0057B7;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .filter-btn:hover {
+            background-color: #FFD700;
+            color: #0057B7;
+        }
+
+        .filter-btn.active {
+            background-color: #FFD700;
+            color: #0057B7;
+        }
     </style>
 </head>
 
@@ -256,6 +285,13 @@
             <h3>Повернути книгу</h3>
             <input type="text" id="returnTitle" placeholder="Назва книги">
             <button onclick="returnBook()">Повернути</button>
+        </div>
+
+        <!-- Фільтри -->
+        <div class="filter-container">
+            <button class="filter-btn active" onclick="filterBooks('all')">Всі книги</button>
+            <button class="filter-btn" onclick="filterBooks('available')">В наявності</button>
+            <button class="filter-btn" onclick="filterBooks('issued')">Видані</button>
         </div>
 
         <!-- Таблиця книг -->
@@ -392,10 +428,33 @@
                     <td>
                         <button class="delete-btn" onclick="deleteBook(${index})">Видалити</button>
                         ${book.status === 'Вільна' ? `<button class="issue-btn" onclick="openIssueModal(${index})">Видати</button>` : ''}
+                        ${book.status === 'Видана' ? `<button class="return-btn" onclick="returnBookFromTable(${index})">Повернути</button>` : ''}
                     </td>
                 `;
                 tbody.appendChild(row);
             });
+        }
+
+        // Фільтрація книг
+        function filterBooks(type) {
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            let filteredBooks;
+            if (type === 'all') {
+                filteredBooks = books;
+                showNotification('Показані всі книги!', 'success');
+            } else if (type === 'available') {
+                filteredBooks = books.filter(book => book.status === 'Вільна');
+                showNotification('Показані книги в наявності!', 'success');
+            } else if (type === 'issued') {
+                filteredBooks = books.filter(book => book.status === 'Видана');
+                showNotification('Показані видані книги!', 'success');
+            }
+            if (filteredBooks.length === 0) {
+                showNotification('Немає книг за цим фільтром!', 'error');
+            }
+            updateTable(filteredBooks);
         }
 
         // Відкрити модальне вікно для видачі
@@ -477,7 +536,7 @@
             }
         }
 
-        // Повернення книги
+        // Повернення книги через форму
         function returnBook() {
             const title = document.getElementById('returnTitle').value.trim();
             const book = books.find(b => b.title === title && b.status === 'Видана');
@@ -490,6 +549,15 @@
             } else {
                 showNotification('Книга не знайдена або не видана!');
             }
+        }
+
+        // Повернення книги через таблицю
+        function returnBookFromTable(index) {
+            const book = books[index];
+            book.status = 'Вільна';
+            book.recipient = null;
+            saveBooks();
+            showNotification('Книга повернута!', 'success');
         }
 
         // Видалення книги
