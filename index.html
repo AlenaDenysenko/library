@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бібліографічний облік ЗСУ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            margin: 20px;
+            background: #1A2521;
+            background-image: linear-gradient(rgba(53, 94, 59, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(53, 94, 59, 0.1) 1px, transparent 1px);
+            background-size: 10px 10px;
+            color: #E0E0E0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #FFD700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+
+        th,
+        td {
+            border: 1px solid #0057B7;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #355E3B;
+            color: #E0E0E0;
+        }
+
+        .form-container {
+            margin-bottom: 20px;
+            background-color: #FFFFFF;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            color: #000000;
+        }
+
+        input,
+        button {
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #0057B7;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #0057B7;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #FFD700;
+            color: #0057B7;
+        }
+
+        .delete-btn {
+            background-color: #D32F2F;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 12px;
+            margin-right: 5px;
+        }
+
+        .delete-btn:hover {
+            background-color: #B71C1C;
+        }
+
+        .issue-btn {
+            background-color: #355E3B;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 12px;
+        }
+
+        .issue-btn:hover {
+            background-color: #FFD700;
+            color: #0057B7;
+        }
+
+        .auth-container {
+            max-width: 350px;
+            margin: 50px auto;
+            text-align: center;
+            background-color: #FFFFFF;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            color: #000000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #logoutBtn {
+            background-color: #355E3B;
+        }
+
+        #logoutBtn:hover {
+            background-color: #FFD700;
+            color: #0057B7;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            color: #FFFFFF;
+        }
+
+        .notification.error {
+            background-color: #D32F2F;
+        }
+
+        .notification.success {
+            background-color: #355E3B;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #FFFFFF;
+            color: #000000;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #0057B7;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+        }
+
+        .modal-content input {
+            width: 80%;
+            margin: 10px auto;
+        }
+
+        .modal-content button {
+            margin: 5px;
+        }
+
+        .cancel-btn {
+            background-color: #D32F2F;
+        }
+
+        .cancel-btn:hover {
+            background-color: #B71C1C;
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Випливаюче сповіщення -->
+    <div id="notification" class="notification hidden"></div>
+
+    <!-- Модальне вікно для видачі книги -->
+    <div id="issueModal" class="modal">
+        <div class="modal-content">
+            <h3>Видати книгу</h3>
+            <p id="modalBookTitle"></p>
+            <input type="text" id="modalRecipient" placeholder="Прізвище отримувача">
+            <button onclick="confirmIssue()">Підтвердити</button>
+            <button class="cancel-btn" onclick="closeModal()">Скасувати</button>
+        </div>
+    </div>
+
+    <!-- Шапка -->
+    <div class="header">
+        <h1>Бібліографічний облік ЗСУ</h1>
+    </div>
+
+    <!-- Екран авторизації -->
+    <div id="authContainer" class="auth-container">
+        <h2>Вхід</h2>
+        <input type="text" id="login" placeholder="Логін">
+        <input type="password" id="password" placeholder="Пароль">
+        <button onclick="login()">Увійти</button>
+        <p>Немає облікового запису? <a href="#" onclick="showRegister()">Зареєструватися</a></p>
+    </div>
+
+    <!-- Екран реєстрації -->
+    <div id="registerContainer" class="auth-container hidden">
+        <h2>Реєстрація</h2>
+        <input type="text" id="regLogin" placeholder="Логін">
+        <input type="password" id="regPassword" placeholder="Пароль">
+        <button onclick="register()">Зареєструватися</button>
+        <p>Вже маєте обліковий запис? <a href="#" onclick="showLogin()">Увійти</a></p>
+    </div>
+
+    <!-- Основний контент -->
+    <div id="mainContent" class="hidden">
+        <button id="logoutBtn" onclick="logout()">Вийти</button>
+
+        <!-- Форма для додавання книги -->
+        <div class="form-container">
+            <h3>Додати книгу</h3>
+            <input type="text" id="title" placeholder="Назва книги">
+            <input type="text" id="author" placeholder="Автор">
+            <button onclick="addBook()">Додати</button>
+        </div>
+
+        <!-- Форма для пошуку -->
+        <div class="form-container">
+            <h3>Пошук</h3>
+            <input type="text" id="searchQuery" placeholder="Введіть назву або автора">
+            <button onclick="searchBooks()">Шукати</button>
+        </div>
+
+        <!-- Форма для видачі -->
+        <div class="form-container">
+            <h3>Видати книгу</h3>
+            <input type="text" id="issueTitle" placeholder="Назва книги">
+            <input type="text" id="recipient" placeholder="Отримувач">
+            <button onclick="issueBook()">Видати</button>
+        </div>
+
+        <!-- Форма для повернення -->
+        <div class="form-container">
+            <h3>Повернути книгу</h3>
+            <input type="text" id="returnTitle" placeholder="Назва книги">
+            <button onclick="returnBook()">Повернути</button>
+        </div>
+
+        <!-- Таблиця книг -->
+        <table id="bookTable">
+            <thead>
+                <tr>
+                    <th>Назва</th>
+                    <th>Автор</th>
+                    <th>Статус</th>
+                    <th>Отримувач</th>
+                    <th>Дія</th>
+                </tr>
+            </thead>
+            <tbody id="bookTableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Проста хеш-функція для паролів
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return hash.toString();
+        }
+
+        // Показати сповіщення
+        function showNotification(message, type = 'error') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.remove('hidden');
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Ініціалізація даних
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let books = JSON.parse(localStorage.getItem('books')) || [];
+        let isLoggedIn = false;
+        let currentBookIndex = null;
+
+        // Перевірка авторизації
+        function checkAuth() {
+            if (isLoggedIn) {
+                document.getElementById('authContainer').classList.add('hidden');
+                document.getElementById('registerContainer').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                updateTable();
+            } else {
+                document.getElementById('authContainer').classList.remove('hidden');
+                document.getElementById('registerContainer').classList.add('hidden');
+                document.getElementById('mainContent').classList.add('hidden');
+            }
+        }
+
+        // Реєстрація
+        function register() {
+            const login = document.getElementById('regLogin').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            if (login && password) {
+                if (users.find(u => u.login === login)) {
+                    showNotification('Користувач із таким логіном уже існує!');
+                } else {
+                    users.push({ login, password: simpleHash(password) });
+                    localStorage.setItem('users', JSON.stringify(users));
+                    showNotification('Реєстрація успішна! Увійдіть.', 'success');
+                    showLogin();
+                }
+            } else {
+                showNotification('Введіть логін і пароль!');
+            }
+        }
+
+        // Вхід
+        function login() {
+            const login = document.getElementById('login').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const user = users.find(u => u.login === login && u.password === simpleHash(password));
+            if (user) {
+                isLoggedIn = true;
+                showNotification('Вхід успішний!', 'success');
+                checkAuth();
+            } else {
+                showNotification('Невірний логін або пароль!');
+            }
+        }
+
+        // Вихід
+        function logout() {
+            isLoggedIn = false;
+            showNotification('Вийшли з системи.', 'success');
+            checkAuth();
+            document.getElementById('login').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // Показати форму входу
+        function showLogin() {
+            document.getElementById('authContainer').classList.remove('hidden');
+            document.getElementById('registerContainer').classList.add('hidden');
+            document.getElementById('regLogin').value = '';
+            document.getElementById('regPassword').value = '';
+        }
+
+        // Показати форму реєстрації
+        function showRegister() {
+            document.getElementById('authContainer').classList.add('hidden');
+            document.getElementById('registerContainer').classList.remove('hidden');
+            document.getElementById('login').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // Збереження книг
+        function saveBooks() {
+            localStorage.setItem('books', JSON.stringify(books));
+            updateTable();
+        }
+
+        // Оновлення таблиці
+        function updateTable(filteredBooks = books) {
+            const tbody = document.getElementById('bookTableBody');
+            tbody.innerHTML = '';
+            filteredBooks.forEach((book, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${book.title}</td>
+                    <td>${book.author}</td>
+                    <td>${book.status}</td>
+                    <td>${book.recipient || '-'}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteBook(${index})">Видалити</button>
+                        ${book.status === 'Вільна' ? `<button class="issue-btn" onclick="openIssueModal(${index})">Видати</button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Відкрити модальне вікно для видачі
+        function openIssueModal(index) {
+            currentBookIndex = index;
+            const book = books[index];
+            document.getElementById('modalBookTitle').textContent = `Книга: ${book.title}`;
+            document.getElementById('modalRecipient').value = '';
+            document.getElementById('issueModal').style.display = 'block';
+        }
+
+        // Закрити модальне вікно
+        function closeModal() {
+            document.getElementById('issueModal').style.display = 'none';
+            currentBookIndex = null;
+        }
+
+        // Підтвердити видачу через модальне вікно
+        function confirmIssue() {
+            const recipient = document.getElementById('modalRecipient').value.trim();
+            if (recipient && currentBookIndex !== null) {
+                const book = books[currentBookIndex];
+                book.status = 'Видана';
+                book.recipient = recipient;
+                saveBooks();
+                closeModal();
+                showNotification('Книга видана!', 'success');
+            } else {
+                showNotification('Введіть прізвище отримувача!');
+            }
+        }
+
+        // Додавання книги
+        function addBook() {
+            const title = document.getElementById('title').value.trim();
+            const author = document.getElementById('author').value.trim();
+            if (title && author) {
+                books.push({ title, author, status: 'Вільна', recipient: null });
+                saveBooks();
+                document.getElementById('title').value = '';
+                document.getElementById('author').value = '';
+                showNotification('Книга додана!', 'success');
+            } else {
+                showNotification('Введіть назву та автора!');
+            }
+        }
+
+        // Пошук книг
+        function searchBooks() {
+            const query = document.getElementById('searchQuery').value.trim().toLowerCase();
+            const filteredBooks = books.filter(book =>
+                book.title.toLowerCase().includes(query) ||
+                book.author.toLowerCase().includes(query)
+            );
+            if (filteredBooks.length === 0 && query) {
+                showNotification('Книгу не знайдено!');
+            }
+            updateTable(filteredBooks);
+        }
+
+        // Видача книги через форму
+        function issueBook() {
+            const title = document.getElementById('issueTitle').value.trim();
+            const recipient = document.getElementById('recipient').value.trim();
+            if (title && recipient) {
+                const book = books.find(b => b.title === title && b.status === 'Вільна');
+                if (book) {
+                    book.status = 'Видана';
+                    book.recipient = recipient;
+                    saveBooks();
+                    document.getElementById('issueTitle').value = '';
+                    document.getElementById('recipient').value = '';
+                    showNotification('Книга видана!', 'success');
+                } else {
+                    showNotification('Книга не знайдена або вже видана!');
+                }
+            } else {
+                showNotification('Введіть назву книги та отримувача!');
+            }
+        }
+
+        // Повернення книги
+        function returnBook() {
+            const title = document.getElementById('returnTitle').value.trim();
+            const book = books.find(b => b.title === title && b.status === 'Видана');
+            if (book) {
+                book.status = 'Вільна';
+                book.recipient = null;
+                saveBooks();
+                document.getElementById('returnTitle').value = '';
+                showNotification('Книга повернута!', 'success');
+            } else {
+                showNotification('Книга не знайдена або не видана!');
+            }
+        }
+
+        // Видалення книги
+        function deleteBook(index) {
+            if (confirm(`Ви впевнені, що хочете видалити книгу "${books[index].title}"?`)) {
+                books.splice(index, 1);
+                saveBooks();
+                showNotification('Книга видалена!', 'success');
+            }
+        }
+
+        // Ініціалізація
+        checkAuth();
+    </script>
+</body>
+
+</html>
