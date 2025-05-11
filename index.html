@@ -17,6 +17,10 @@
             color: #E0E0E0;
         }
 
+        body.modal-open {
+            overflow: hidden;
+        }
+
         .header {
             text-align: center;
             margin-bottom: 20px;
@@ -57,7 +61,8 @@
         }
 
         input,
-        button {
+        button,
+        select {
             margin: 5px;
             padding: 10px;
             border: 1px solid #0057B7;
@@ -90,7 +95,8 @@
         }
 
         .issue-btn,
-        .return-btn {
+        .return-btn,
+        .edit-btn {
             background-color: #355E3B;
             color: #FFFFFF;
             border: none;
@@ -99,7 +105,8 @@
         }
 
         .issue-btn:hover,
-        .return-btn:hover {
+        .return-btn:hover,
+        .edit-btn:hover {
             background-color: #FFD700;
             color: #0057B7;
         }
@@ -156,17 +163,20 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
+            overflow: auto;
         }
 
         .modal-content {
             background-color: #FFFFFF;
             color: #000000;
-            margin: 15% auto;
+            margin: 10% auto;
             padding: 20px;
             border: 1px solid #0057B7;
             border-radius: 8px;
-            width: 300px;
+            width: 350px;
             text-align: center;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .modal-content input {
@@ -212,6 +222,54 @@
             background-color: #FFD700;
             color: #0057B7;
         }
+
+        .stats-container {
+            margin-bottom: 20px;
+            background-color: #FFFFFF;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            color: #000000;
+            text-align: center;
+        }
+
+        .logs-container {
+            margin-top: 20px;
+            background-color: #FFFFFF;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            color: #000000;
+        }
+
+        .logs-container table {
+            margin-top: 10px;
+        }
+
+        #helpModal .modal-content {
+            width: 500px;
+            text-align: left;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+
+            .header,
+            .form-container,
+            .filter-container,
+            .stats-container,
+            .logs-container,
+            button,
+            .modal {
+                display: none;
+            }
+
+            table {
+                color: #000000;
+            }
+        }
     </style>
 </head>
 
@@ -227,6 +285,39 @@
             <input type="text" id="modalRecipient" placeholder="Прізвище отримувача">
             <button onclick="confirmIssue()">Підтвердити</button>
             <button class="cancel-btn" onclick="closeModal()">Скасувати</button>
+        </div>
+    </div>
+
+    <!-- Модальне вікно для редагування книги -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>Редагувати книгу</h3>
+            <input type="text" id="editTitle" placeholder="Назва книги">
+            <input type="text" id="editAuthor" placeholder="Автор">
+            <button onclick="confirmEdit()">Зберегти</button>
+            <button class="cancel-btn" onclick="closeEditModal()">Скасувати</button>
+        </div>
+    </div>
+
+    <!-- Модальне вікно для інструкції -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <h3>Інструкція з використання</h3>
+            <p><strong>1. Авторизація:</strong> Зареєструйтесь або увійдіть (логін/пароль).</p>
+            <p><strong>2. Додавання книги:</strong> У розділі "Додати книгу" введіть назву й автора, натисніть "Додати".
+            </p>
+            <p><strong>3. Пошук:</strong> Введіть назву або автора, виберіть тип пошуку (назва/автор), натисніть
+                "Шукати".</p>
+            <p><strong>4. Видача:</strong> Через форму (введіть назву, отримувача) або таблицю (кнопка "Видати", введіть
+                отримувача).</p>
+            <p><strong>5. Повернення:</strong> Через форму (введіть назву) або таблицю (кнопка "Повернути").</p>
+            <p><strong>6. Видалення:</strong> Кнопка "Видалити" в таблиці, підтвердіть дію.</p>
+            <p><strong>7. Сортування:</strong> Кнопки "Всі книги", "В наявності", "Видані".</p>
+            <p><strong>8. Експорт/імпорт:</strong> Збережіть книги у файл або завантажте з файлу.</p>
+            <p><strong>9. Статистика:</strong> Перегляньте кількість книг унизу.</p>
+            <p><strong>10. Друк:</strong> Натисніть "Друк" для роздрукування таблиці.</p>
+            <p><strong>11. Історія:</strong> Перегляньте дії користувачів у розділі "Історія операцій".</p>
+            <button onclick="closeHelpModal()">Закрити</button>
         </div>
     </div>
 
@@ -256,6 +347,7 @@
     <!-- Основний контент -->
     <div id="mainContent" class="hidden">
         <button id="logoutBtn" onclick="logout()">Вийти</button>
+        <button onclick="openHelpModal()">Допомога</button>
 
         <!-- Форма для додавання книги -->
         <div class="form-container">
@@ -269,6 +361,10 @@
         <div class="form-container">
             <h3>Пошук</h3>
             <input type="text" id="searchQuery" placeholder="Введіть назву або автора">
+            <select id="searchType">
+                <option value="title">За назвою</option>
+                <option value="author">За автором</option>
+            </select>
             <button onclick="searchBooks()">Шукати</button>
         </div>
 
@@ -287,11 +383,23 @@
             <button onclick="returnBook()">Повернути</button>
         </div>
 
+        <!-- Експорт/імпорт -->
+        <div class="form-container">
+            <h3>Експорт/імпорт даних</h3>
+            <button onclick="exportBooks()">Експорт у JSON</button>
+            <input type="file" id="importFile" accept=".json">
+            <button onclick="importBooks()">Імпорт із JSON</button>
+        </div>
+
+        <!-- Статистика -->
+        <div class="stats-container" id="statsContainer"></div>
+
         <!-- Фільтри -->
         <div class="filter-container">
             <button class="filter-btn active" onclick="filterBooks('all')">Всі книги</button>
             <button class="filter-btn" onclick="filterBooks('available')">В наявності</button>
             <button class="filter-btn" onclick="filterBooks('issued')">Видані</button>
+            <button class="filter-btn" onclick="printTable()">Друк</button>
         </div>
 
         <!-- Таблиця книг -->
@@ -307,6 +415,22 @@
             </thead>
             <tbody id="bookTableBody"></tbody>
         </table>
+
+        <!-- Історія операцій -->
+        <div class="logs-container">
+            <h3>Історія операцій</h3>
+            <table id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Дія</th>
+                        <th>Книга</th>
+                        <th>Користувач</th>
+                        <th>Час</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -334,16 +458,25 @@
         // Ініціалізація даних
         let users = JSON.parse(localStorage.getItem('users')) || [];
         let books = JSON.parse(localStorage.getItem('books')) || [];
+        let logs = JSON.parse(localStorage.getItem('logs')) || [];
         let isLoggedIn = false;
+        let currentUser = null;
         let currentBookIndex = null;
 
-        // Перевірка авторизації
+        // Перевірка авторизації при завантаженні
         function checkAuth() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                isLoggedIn = true;
+                currentUser = savedUser;
+            }
             if (isLoggedIn) {
                 document.getElementById('authContainer').classList.add('hidden');
                 document.getElementById('registerContainer').classList.add('hidden');
                 document.getElementById('mainContent').classList.remove('hidden');
                 updateTable();
+                updateStats();
+                updateLogs();
             } else {
                 document.getElementById('authContainer').classList.remove('hidden');
                 document.getElementById('registerContainer').classList.add('hidden');
@@ -376,6 +509,8 @@
             const user = users.find(u => u.login === login && u.password === simpleHash(password));
             if (user) {
                 isLoggedIn = true;
+                currentUser = login;
+                localStorage.setItem('currentUser', currentUser);
                 showNotification('Вхід успішний!', 'success');
                 checkAuth();
             } else {
@@ -386,6 +521,8 @@
         // Вихід
         function logout() {
             isLoggedIn = false;
+            currentUser = null;
+            localStorage.removeItem('currentUser');
             showNotification('Вийшли з системи.', 'success');
             checkAuth();
             document.getElementById('login').value = '';
@@ -412,9 +549,53 @@
         function saveBooks() {
             localStorage.setItem('books', JSON.stringify(books));
             updateTable();
+            updateStats();
         }
 
-        // Оновлення таблиці
+        // Збереження логів
+        function saveLogs() {
+            localStorage.setItem('logs', JSON.stringify(logs));
+            updateLogs();
+        }
+
+        // Додавання логу
+        function addLog(action, bookTitle) {
+            logs.push({
+                action,
+                book: bookTitle,
+                user: currentUser,
+                timestamp: new Date().toLocaleString('uk-UA')
+            });
+            saveLogs();
+        }
+
+        // Оновлення статистики
+        function updateStats() {
+            const total = books.length;
+            const available = books.filter(b => b.status === 'Вільна').length;
+            const issued = books.filter(b => b.status === 'Видана').length;
+            document.getElementById('statsContainer').innerHTML = `
+                <p>Усього книг: ${total} | Вільні: ${available} | Видані: ${issued}</p>
+            `;
+        }
+
+        // Оновлення таблиці логів
+        function updateLogs() {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '';
+            logs.forEach(log => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${log.action}</td>
+                    <td>${log.book}</td>
+                    <td>${log.user}</td>
+                    <td>${log.timestamp}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Оновлення таблиці книг
         function updateTable(filteredBooks = books) {
             const tbody = document.getElementById('bookTableBody');
             tbody.innerHTML = '';
@@ -427,6 +608,7 @@
                     <td>${book.recipient || '-'}</td>
                     <td>
                         <button class="delete-btn" onclick="deleteBook(${index})">Видалити</button>
+                        <button class="edit-btn" onclick="openEditModal(${index})">Редагувати</button>
                         ${book.status === 'Вільна' ? `<button class="issue-btn" onclick="openIssueModal(${index})">Видати</button>` : ''}
                         ${book.status === 'Видана' ? `<button class="return-btn" onclick="returnBookFromTable(${index})">Повернути</button>` : ''}
                     </td>
@@ -464,12 +646,14 @@
             document.getElementById('modalBookTitle').textContent = `Книга: ${book.title}`;
             document.getElementById('modalRecipient').value = '';
             document.getElementById('issueModal').style.display = 'block';
+            document.body.classList.add('modal-open');
         }
 
-        // Закрити модальне вікно
+        // Закрити модальне вікно видачі
         function closeModal() {
             document.getElementById('issueModal').style.display = 'none';
             currentBookIndex = null;
+            document.body.classList.remove('modal-open');
         }
 
         // Підтвердити видачу через модальне вікно
@@ -479,6 +663,7 @@
                 const book = books[currentBookIndex];
                 book.status = 'Видана';
                 book.recipient = recipient;
+                addLog('Видача', book.title);
                 saveBooks();
                 closeModal();
                 showNotification('Книга видана!', 'success');
@@ -487,12 +672,69 @@
             }
         }
 
+        // Відкрити модальне вікно для редагування
+        function openEditModal(index) {
+            currentBookIndex = index;
+            const book = books[index];
+            document.getElementById('editTitle').value = book.title;
+            document.getElementById('editAuthor').value = book.author;
+            document.getElementById('editModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+
+        // Закрити модальне вікно редагування
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            currentBookIndex = null;
+            document.body.classList.remove('modal-open');
+        }
+
+        // Підтвердити редагування
+        function confirmEdit() {
+            const title = document.getElementById('editTitle').value.trim();
+            const author = document.getElementById('editAuthor').value.trim();
+            if (title && author && currentBookIndex !== null) {
+                const book = books[currentBookIndex];
+                book.title = title;
+                book.author = author;
+                addLog('Редагування', book.title);
+                saveBooks();
+                closeEditModal();
+                showNotification('Книга відредагована!', 'success');
+            } else {
+                showNotification('Введіть назву та автора!');
+            }
+        }
+
+        // Відкрити модальне вікно інструкції
+        function openHelpModal() {
+            document.getElementById('helpModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+
+        // Закрити модальне вікно інструкції
+        function closeHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        // Закриття модальних вікон при кліку поза контентом
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                }
+            });
+        });
+
         // Додавання книги
         function addBook() {
             const title = document.getElementById('title').value.trim();
             const author = document.getElementById('author').value.trim();
             if (title && author) {
                 books.push({ title, author, status: 'Вільна', recipient: null });
+                addLog('Додавання', title);
                 saveBooks();
                 document.getElementById('title').value = '';
                 document.getElementById('author').value = '';
@@ -505,9 +747,10 @@
         // Пошук книг
         function searchBooks() {
             const query = document.getElementById('searchQuery').value.trim().toLowerCase();
+            const type = document.getElementById('searchType').value;
             const filteredBooks = books.filter(book =>
-                book.title.toLowerCase().includes(query) ||
-                book.author.toLowerCase().includes(query)
+                type === 'title' ? book.title.toLowerCase().includes(query) :
+                    book.author.toLowerCase().includes(query)
             );
             if (filteredBooks.length === 0 && query) {
                 showNotification('Книгу не знайдено!');
@@ -524,6 +767,7 @@
                 if (book) {
                     book.status = 'Видана';
                     book.recipient = recipient;
+                    addLog('Видача', book.title);
                     saveBooks();
                     document.getElementById('issueTitle').value = '';
                     document.getElementById('recipient').value = '';
@@ -543,6 +787,7 @@
             if (book) {
                 book.status = 'Вільна';
                 book.recipient = null;
+                addLog('Повернення', book.title);
                 saveBooks();
                 document.getElementById('returnTitle').value = '';
                 showNotification('Книга повернута!', 'success');
@@ -556,6 +801,7 @@
             const book = books[index];
             book.status = 'Вільна';
             book.recipient = null;
+            addLog('Повернення', book.title);
             saveBooks();
             showNotification('Книга повернута!', 'success');
         }
@@ -563,10 +809,58 @@
         // Видалення книги
         function deleteBook(index) {
             if (confirm(`Ви впевнені, що хочете видалити книгу "${books[index].title}"?`)) {
+                const bookTitle = books[index].title;
                 books.splice(index, 1);
+                addLog('Видалення', bookTitle);
                 saveBooks();
                 showNotification('Книга видалена!', 'success');
             }
+        }
+
+        // Експорт книг
+        function exportBooks() {
+            const dataStr = JSON.stringify(books);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'books.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Дані експортовано!', 'success');
+        }
+
+        // Імпорт книг
+        function importBooks() {
+            const fileInput = document.getElementById('importFile');
+            if (fileInput.files.length === 0) {
+                showNotification('Виберіть файл!');
+                return;
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const importedBooks = JSON.parse(e.target.result);
+                    if (Array.isArray(importedBooks)) {
+                        books = importedBooks;
+                        saveBooks();
+                        showNotification('Дані імпортовано!', 'success');
+                    } else {
+                        showNotification('Невірний формат файлу!');
+                    }
+                } catch {
+                    showNotification('Помилка при імпорті!');
+                }
+            };
+            reader.readAsText(file);
+            fileInput.value = '';
+        }
+
+        // Друк таблиці
+        function printTable() {
+            window.print();
+            showNotification('Таблиця підготовлена до друку!', 'success');
         }
 
         // Ініціалізація
